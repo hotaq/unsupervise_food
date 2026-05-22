@@ -14,7 +14,6 @@ const ROW_DAYS = [1, 2, 3, 4, 5, 6, 0];
 export function HourDayHeatmap({ data }: Props) {
   const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState<"enjoyment" | "frequency">("enjoyment");
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -196,8 +195,8 @@ export function HourDayHeatmap({ data }: Props) {
 
       {/* Heatmap Card */}
       <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-        <div ref={containerRef} className="relative overflow-x-auto scrollbar-thin">
-          <svg width={width} height={height} className="block">
+        <div className="relative w-full">
+          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto block">
             {/* Weekday Row Labels */}
             {DAY_LABELS.map((dayLabel, rIdx) => (
               <text
