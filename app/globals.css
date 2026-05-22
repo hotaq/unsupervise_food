@@ -3,6 +3,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --cal-0: #ebedf0; /* Light empty Zinc */
+  --cal-1: #fef3c7; /* Light L1 Amber-100 */
+  --cal-2: #fde68a; /* Light L2 Amber-200 */
+  --cal-3: #f59e0b; /* Light L3 Amber-500 */
+  --cal-4: #d97706; /* Light L4 Amber-600 */
 }
 
 @theme inline {
@@ -16,7 +21,22 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --cal-0: #161b22; /* Dark empty */
+    --cal-1: #451a03; /* Dark L1 Amber-950 */
+    --cal-2: #78350f; /* Dark L2 Amber-900 */
+    --cal-3: #b45309; /* Dark L3 Amber-700 */
+    --cal-4: #f59e0b; /* Dark L4 Amber-500 */
   }
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --cal-0: #161b22; /* Dark empty */
+  --cal-1: #451a03; /* Dark L1 Amber-950 */
+  --cal-2: #78350f; /* Dark L2 Amber-900 */
+  --cal-3: #b45309; /* Dark L3 Amber-700 */
+  --cal-4: #f59e0b; /* Dark L4 Amber-500 */
 }
 
 body {
@@ -24,3 +44,31 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Calendar explicit grid level background colors - Amber Theme */
+.cal-bg-0 { background-color: var(--cal-0) !important; fill: var(--cal-0) !important; }
+.cal-bg-1 { background-color: var(--cal-1) !important; fill: var(--cal-1) !important; }
+.cal-bg-2 { background-color: var(--cal-2) !important; fill: var(--cal-2) !important; }
+.cal-bg-3 { background-color: var(--cal-3) !important; fill: var(--cal-3) !important; }
+.cal-bg-4 { background-color: var(--cal-4) !important; fill: var(--cal-4) !important; }
+
+/* Premium scrollbar styling for the calendar grid */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 5px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #e4e4e7;
+  border-radius: 9999px;
+}
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #27272a;
+}
+@media (prefers-color-scheme: dark) {
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #27272a;
+  }
+}
+
