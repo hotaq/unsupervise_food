@@ -2,6 +2,28 @@
 
 create extension if not exists pg_trgm;
 
+create table if not exists public.food_ratings (
+  id              bigserial primary key,
+  food            text not null check (char_length(food) between 1 and 255),
+  rating          smallint not null check (rating between 1 and 5),
+  sent_at         timestamptz not null default now(),
+  created_at      timestamptz not null default now()
+);
+
+create index if not exists food_ratings_sent_at_idx
+  on public.food_ratings(sent_at desc);
+
+alter table public.food_ratings enable row level security;
+
+drop policy if exists "anyone can read ratings" on public.food_ratings;
+create policy "anyone can read ratings"
+  on public.food_ratings for select using (true);
+
+drop policy if exists "anyone can insert ratings" on public.food_ratings;
+create policy "anyone can insert ratings"
+  on public.food_ratings for insert
+  with check (true);
+
 create table if not exists public.foods (
   id              bigserial primary key,
   wikidata_id     text unique,

@@ -70,6 +70,7 @@ export function FoodCombobox({
           `HTTP ${res.status}`;
         throw new Error(msg);
       }
+      if (abortRef.current !== controller) return;
       setItems((json.items ?? []) as FoodOption[]);
       setActiveIndex((json.items ?? []).length > 0 ? 0 : -1);
     } catch (err) {
@@ -78,15 +79,13 @@ export function FoodCombobox({
       setItems([]);
       setActiveIndex(-1);
     } finally {
-      setLoading(false);
+      if (abortRef.current === controller) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!query.trim()) {
-      setItems([]);
-      setActiveIndex(-1);
       return;
     }
     debounceRef.current = setTimeout(() => {
@@ -156,9 +155,16 @@ export function FoodCombobox({
         aria-autocomplete="list"
         aria-controls="food-combobox-list"
         onChange={(e) => {
-          setQuery(e.target.value);
+          const nextQuery = e.target.value;
+          setQuery(nextQuery);
           setSelected(null);
           setOpen(true);
+          if (!nextQuery.trim()) {
+            abortRef.current?.abort();
+            setLoading(false);
+            setItems([]);
+            setActiveIndex(-1);
+          }
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onKeyDown}

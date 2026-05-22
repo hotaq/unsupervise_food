@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState } from "react";
 import type { HeatmapRating } from "../actions";
+import { useMounted } from "./use-mounted";
 
 type Props = {
   data: HeatmapRating[];
@@ -10,14 +11,12 @@ type Props = {
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 // Day mapping corresponding to DAY_LABELS row indices: Mon (1), Tue (2), Wed (3), Thu (4), Fri (5), Sat (6), Sun (0)
 const ROW_DAYS = [1, 2, 3, 4, 5, 6, 0];
+const MIN_INSIGHT_RATINGS = 10;
+const MIN_SLOT_RATINGS = 2;
 
 export function HourDayHeatmap({ data }: Props) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [mode, setMode] = useState<"enjoyment" | "frequency">("enjoyment");
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Build the 7x24 grid cells in the user's actual browser local timezone
   const cells = useMemo(() => {
@@ -60,18 +59,17 @@ export function HourDayHeatmap({ data }: Props) {
 
   // Dynamically calculate habits and cravings insights
   const insights = useMemo(() => {
-    if (data.length === 0) return null;
+    if (data.length < MIN_INSIGHT_RATINGS) return null;
 
-    let peakEatCell = null;
-    let peakEnjoyCell = null;
+    let peakEatCell: (typeof cells)[number] | null = null;
+    let peakEnjoyCell: (typeof cells)[number] | null = null;
 
     for (const c of cells) {
       if (c.count > 0) {
         if (!peakEatCell || c.count > peakEatCell.count) {
           peakEatCell = c;
         }
-        // Peak enjoyment slot: has high average rating and at least 1 rating
-        if (c.avgRating >= 4.0) {
+        if (c.count >= MIN_SLOT_RATINGS && c.avgRating >= 4.0) {
           if (
             !peakEnjoyCell ||
             c.avgRating > peakEnjoyCell.avgRating ||
@@ -94,7 +92,7 @@ export function HourDayHeatmap({ data }: Props) {
     };
 
     return {
-      peakEat: peakEatCell
+      peakEat: peakEatCell && peakEatCell.count >= MIN_SLOT_RATINGS
         ? `${getDayName(peakEatCell.day)}s around ${formatHour(peakEatCell.hour)}`
         : null,
       peakEnjoy: peakEnjoyCell
@@ -225,7 +223,7 @@ export function HourDayHeatmap({ data }: Props) {
             ))}
 
             {/* Grid Squares */}
-            {cells.map((c, idx) => {
+            {cells.map((c) => {
               const rIdx = ROW_DAYS.indexOf(c.day);
               const x = rowLabelWidth + c.hour * (cell + gap);
               const y = paddingTop + colLabelHeight + rIdx * (cell + gap);

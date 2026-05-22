@@ -19,7 +19,10 @@ export default async function Home() {
 
         <RateForm />
 
-        <GroupedRatingsList initialRatings={recent} />
+        <GroupedRatingsList
+          key={`${recent[0]?.id ?? "empty"}-${recent.length}`}
+          initialRatings={recent}
+        />
       </main>
     </div>
   );

@@ -1,35 +1,29 @@
 import {
   getFoodScatter,
   getRatingFrequency,
-  getRecentRatings,
   getHeatmapRatings,
+  getRatingSummary,
 } from "../actions";
 import { FoodClusterScatter } from "../components/food-cluster-scatter";
 import { RatingCalendar } from "../components/rating-calendar";
 import { HourDayHeatmap } from "../components/hour-day-heatmap";
+import { InsightAutoRefresh } from "../components/insight-auto-refresh";
 
 export const dynamic = "force-dynamic";
 
 export default async function InsightPage() {
-  const [ratings, scatter, frequency, heatmapRatings] = await Promise.all([
-    getRecentRatings(),
+  const [summary, scatter, frequency, heatmapRatings] = await Promise.all([
+    getRatingSummary(),
     getFoodScatter({ minRatings: 1, limit: 1000 }),
     getRatingFrequency(365),
     getHeatmapRatings(),
   ]);
 
-  const total = ratings.length;
-  const avg =
-    total > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / total : 0;
-
-  const distribution = [1, 2, 3, 4, 5].map((stars) => ({
-    stars,
-    count: ratings.filter((r) => r.rating === stars).length,
-  }));
-  const max = Math.max(1, ...distribution.map((d) => d.count));
+  const max = Math.max(1, ...summary.distribution.map((d) => d.count));
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12">
+      <InsightAutoRefresh />
       <header className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
           Insight
@@ -40,10 +34,10 @@ export default async function InsightPage() {
       </header>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Stat label="Recent ratings" value={total.toString()} />
+        <Stat label="Ratings analyzed" value={summary.total.toString()} />
         <Stat
           label="Average score"
-          value={total > 0 ? `${avg.toFixed(2)} / 5` : "--"}
+          value={summary.total > 0 ? `${summary.avg.toFixed(2)} / 5` : "--"}
         />
       </section>
 
@@ -52,7 +46,7 @@ export default async function InsightPage() {
           Distribution
         </h2>
         <ul className="flex flex-col gap-3">
-          {distribution
+          {summary.distribution
             .slice()
             .reverse()
             .map(({ stars, count }) => (

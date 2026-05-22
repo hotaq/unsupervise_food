@@ -11,10 +11,22 @@ type FoodRow = {
   aliases: string[] | null;
 };
 
+const MAX_QUERY_LENGTH = 80;
+
+function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
   if (q.length < 1) {
     return NextResponse.json({ items: [] });
+  }
+  if (q.length > MAX_QUERY_LENGTH) {
+    return NextResponse.json(
+      { error: "Search query is too long.", items: [] },
+      { status: 400 },
+    );
   }
 
   const cookieStore = await cookies();
@@ -42,18 +54,26 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // 2) Fallback: ILIKE OR across name + aliases. Slower, no ranking, but works
-  // even before 02_search_rpc.sql has been applied. Searches name_en, name_th,
-  // and the aliases array. We escape % and _ in the user query.
-  const safe = q.replace(/[\\%_]/g, (c) => `\\${c}`);
+  // 2) Fallback: structured ILIKE queries across names. Slower and less complete
+  // than the RPC, but works before 02_search_rpc.sql has been applied.
+  const safe = escapeLikePattern(q);
   const like = `%${safe}%`;
-  const { data, error } = await supabase
-    .from("foods")
-    .select("id, name_en, name_th, aliases")
-    .eq("status", "approved")
-    .or(`name_en.ilike.${like},name_th.ilike.${like}`)
-    .limit(10);
+  const [nameEnRes, nameThRes] = await Promise.all([
+    supabase
+      .from("foods")
+      .select("id, name_en, name_th, aliases")
+      .eq("status", "approved")
+      .ilike("name_en", like)
+      .limit(10),
+    supabase
+      .from("foods")
+      .select("id, name_en, name_th, aliases")
+      .eq("status", "approved")
+      .ilike("name_th", like)
+      .limit(10),
+  ]);
 
+  const error = nameEnRes.error ?? nameThRes.error;
   if (error) {
     console.error("[/api/foods/search] fallback error:", {
       code: error.code,
@@ -66,5 +86,11 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ items: (data ?? []) as FoodRow[], mode: "ilike" });
+  const merged = new Map<number, FoodRow>();
+  for (const item of [...(nameEnRes.data ?? []), ...(nameThRes.data ?? [])]) {
+    if (!merged.has(item.id)) merged.set(item.id, item as FoodRow);
+    if (merged.size >= 10) break;
+  }
+
+  return NextResponse.json({ items: [...merged.values()], mode: "ilike" });
 }

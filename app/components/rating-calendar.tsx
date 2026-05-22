@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DailyCount } from "../actions";
+import { useMounted } from "./use-mounted";
 
 type Props = {
   data: DailyCount[];
@@ -9,21 +10,6 @@ type Props = {
 };
 
 // 5 levels including zero, mapped to amber tints to match the rest of the UI.
-const LIGHT_LEVELS = [
-  "#f4f4f5", // zinc-100 (zero)
-  "#fde68a", // amber-200
-  "#fcd34d", // amber-300
-  "#fbbf24", // amber-400
-  "#f59e0b", // amber-500
-];
-const DARK_LEVELS = [
-  "#1f1f23",
-  "#78350f",
-  "#b45309",
-  "#d97706",
-  "#f59e0b",
-];
-
 const DAY_LABELS = ["Mon", "Wed", "Fri"];
 
 function levelFor(count: number, max: number): number {
@@ -50,13 +36,9 @@ const fullDateFmt = new Intl.DateTimeFormat("en-US", {
 });
 
 export function RatingCalendar({ data }: Props) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [range, setRange] = useState<30 | 90 | 180 | 365>(365);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (mounted && containerRef.current) {
@@ -91,11 +73,6 @@ export function RatingCalendar({ data }: Props) {
     () => filteredCells.reduce((s, c) => s + (c?.count ?? 0), 0),
     [filteredCells],
   );
-  const activeDays = useMemo(
-    () => filteredCells.filter((c) => c && c.count > 0).length,
-    [filteredCells],
-  );
-
   const cell = 12;
   const gap = 3;
   const dayLabelWidth = 24;

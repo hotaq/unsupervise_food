@@ -44,11 +44,10 @@ function trigrams(s: string): string[] {
 function buildTfidfMatrix(rows: FoodForCluster[], topK = 1500): number[][] {
   // Document frequency per trigram.
   const df = new Map<string, number>();
-  const docTriList: string[][] = rows.map((r) => {
+  for (const r of rows) {
     const tris = Array.from(new Set(trigrams(r.text)));
     for (const t of tris) df.set(t, (df.get(t) ?? 0) + 1);
-    return tris;
-  });
+  }
 
   // Pick the most common K trigrams as the vocabulary.
   const vocab = [...df.entries()]

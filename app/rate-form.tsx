@@ -1,31 +1,34 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { submitRating, type SubmitState } from "./actions";
 import { FoodCombobox } from "./components/food-combobox";
 
 const initialState: SubmitState = { status: "idle" };
 
 export function RateForm() {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(submitRating, initialState);
   const [rating, setRating] = useState<number>(0);
   const [hover, setHover] = useState<number>(0);
-  const [sentAt, setSentAt] = useState<string>("");
+  const sentAtRef = useRef<HTMLInputElement | null>(null);
 
   const active = hover || rating;
 
   useEffect(() => {
-    if (state.status === "ok") {
-      setRating(0);
-      setHover(0);
-    }
-  }, [state]);
+    if (state.status === "ok") router.refresh();
+  }, [router, state]);
 
   return (
     <div className="flex w-full max-w-xl flex-col gap-4">
       <form
         action={formAction}
-        onSubmit={() => setSentAt(new Date().toISOString())}
+        onSubmit={() => {
+          if (sentAtRef.current) {
+            sentAtRef.current.value = new Date().toISOString();
+          }
+        }}
         className="flex flex-col gap-4"
       >
         <label
@@ -66,7 +69,7 @@ export function RateForm() {
           ))}
         </div>
         <input type="hidden" name="rating" value={rating} />
-        <input type="hidden" name="sentAt" value={sentAt} />
+        <input ref={sentAtRef} type="hidden" name="sentAt" />
 
         <button
           type="submit"

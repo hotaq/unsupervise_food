@@ -9,8 +9,9 @@ import {
   useItemTooltip,
 } from "@mui/x-charts/ChartsTooltip";
 import { ScatterChart, type ScatterChartProps } from "@mui/x-charts/ScatterChart";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 import type { FoodScatterPoint } from "../actions";
+import { useMounted } from "./use-mounted";
 
 type Props = {
   points: FoodScatterPoint[];
@@ -38,10 +39,7 @@ const LABELS: Record<Bucket, string> = {
 const POINT_LOOKUP: Map<string, FoodScatterPoint[]> = new Map();
 
 export function FoodClusterScatter({ points }: Props) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   const { series, hasData } = useMemo(() => {
     POINT_LOOKUP.clear();
@@ -53,7 +51,7 @@ export function FoodClusterScatter({ points }: Props) {
         id: bucket,
         label: LABELS[bucket],
         color: COLORS[bucket],
-        markerSize: 4,
+        markerSize: 7,
         highlightScope: { highlight: "item", fade: "global" } as const,
         data: subset.map((p, idx) => ({ id: idx, x: p.x, y: p.y })),
       };
@@ -78,14 +76,15 @@ export function FoodClusterScatter({ points }: Props) {
 
   const params: ScatterChartProps = {
     series,
-    height: 420,
+    height: 440,
+    hitAreaRadius: 28,
     xAxis: [{ disableLine: true, disableTicks: true, tickLabelStyle: { display: "none" } }],
     yAxis: [{ disableLine: true, disableTicks: true, tickLabelStyle: { display: "none" } }],
     grid: { vertical: false, horizontal: false },
-    margin: { left: 8, right: 8, top: 8, bottom: 8 },
+    margin: { left: 24, right: 24, top: 54, bottom: 54 },
     slotProps: {
       legend: {
-        position: { vertical: "bottom", horizontal: "center" },
+        position: { vertical: "top", horizontal: "center" },
         sx: { justifyContent: "center" },
       },
     },
@@ -94,7 +93,7 @@ export function FoodClusterScatter({ points }: Props) {
 
   return (
     <Stack spacing={1} sx={{ width: "100%" }}>
-      <div className="rounded-2xl border border-zinc-200 bg-white p-2 dark:border-zinc-800 dark:bg-zinc-950">
+      <div className="overflow-visible rounded-2xl border border-zinc-200 bg-white p-2 dark:border-zinc-800 dark:bg-zinc-950">
         <ScatterChart {...params} />
       </div>
     </Stack>
@@ -103,7 +102,11 @@ export function FoodClusterScatter({ points }: Props) {
 
 function FoodTooltip() {
   return (
-    <ChartsTooltipContainer trigger="item">
+    <ChartsTooltipContainer
+      anchor="node"
+      position="top"
+      trigger="item"
+    >
       <FoodTooltipContent />
     </ChartsTooltipContainer>
   );

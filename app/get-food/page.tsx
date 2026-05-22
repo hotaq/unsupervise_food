@@ -7,7 +7,7 @@ export default function GetFoodPage() {
         </h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Recommendations will appear here. Tell me what you want this page to
-          do and I'll wire it up.
+          do and I&apos;ll wire it up.
         </p>
       </header>
 
