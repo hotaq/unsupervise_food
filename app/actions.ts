@@ -116,7 +116,7 @@ export type RecentRating = {
   createdAt: string;
 };
 
-export async function getRecentRatings(): Promise<RecentRating[]> {
+export async function getRecentRatings(limit: number = 5): Promise<RecentRating[]> {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
 
@@ -126,7 +126,7 @@ export async function getRecentRatings(): Promise<RecentRating[]> {
       .from("food_ratings")
       .select("id, food, rating, sent_at, created_at")
       .order("sent_at", { ascending: false })
-      .limit(5);
+      .limit(limit);
   } catch (err) {
     console.error(
       "[getRecentRatings] threw:",
