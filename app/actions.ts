@@ -316,3 +316,33 @@ export async function getFoodScatter(
 
   return reduceToScatter(rows);
 }
+
+export type HeatmapRating = {
+  rating: number;
+  sentAt: string;
+};
+
+export async function getHeatmapRatings(): Promise<HeatmapRating[]> {
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
+
+  let result;
+  try {
+    result = await supabase
+      .from("food_ratings")
+      .select("rating, sent_at");
+  } catch (err) {
+    console.error("[getHeatmapRatings] threw:", err);
+    return [];
+  }
+
+  if (result.error) {
+    console.error("[getHeatmapRatings] error:", result.error);
+    return [];
+  }
+
+  return (result.data ?? []).map((r) => ({
+    rating: r.rating,
+    sentAt: r.sent_at,
+  }));
+}

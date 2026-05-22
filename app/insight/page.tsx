@@ -2,17 +2,20 @@ import {
   getFoodScatter,
   getRatingFrequency,
   getRecentRatings,
+  getHeatmapRatings,
 } from "../actions";
 import { FoodClusterScatter } from "../components/food-cluster-scatter";
 import { RatingCalendar } from "../components/rating-calendar";
+import { HourDayHeatmap } from "../components/hour-day-heatmap";
 
 export const dynamic = "force-dynamic";
 
 export default async function InsightPage() {
-  const [ratings, scatter, frequency] = await Promise.all([
+  const [ratings, scatter, frequency, heatmapRatings] = await Promise.all([
     getRecentRatings(),
     getFoodScatter({ minRatings: 1, limit: 1000 }),
     getRatingFrequency(365),
+    getHeatmapRatings(),
   ]);
 
   const total = ratings.length;
@@ -82,6 +85,13 @@ export default async function InsightPage() {
           Rating frequency
         </h2>
         <RatingCalendar data={frequency} />
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+          Hour × day heatmap
+        </h2>
+        <HourDayHeatmap data={heatmapRatings} />
       </section>
 
       <section className="flex flex-col gap-3">
